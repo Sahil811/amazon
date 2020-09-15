@@ -15,6 +15,8 @@ const Payment = () => {
 
   const [error, setError] = useState(null);
   const [disabled, setDisabled] = useState(true);
+  const [succeeded, setSucceeded] = useState(false);
+  const [processing, setProcessing] = useState("");
 
   const handleSubmit = (e) => {};
 
@@ -75,7 +77,12 @@ const Payment = () => {
                   thousandSeparator={true}
                   prefix={"$"}
                 />
+                <button disabled={processing || disabled || succeeded}>
+                  <span>{processing ? <p>processing</p> : "Buy Now"}</span>
+                </button>
               </div>
+
+              {error && <div>{error}</div>}
             </form>
           </div>
         </div>
