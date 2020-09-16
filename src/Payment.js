@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./Payment.css";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { useStateValue } from "./StateProvider";
 import CheckoutProduct from "./CheckoutProduct";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -8,8 +8,9 @@ import { getBasketTotal } from "./reducer";
 import CurrencyFormat from "react-currency-format";
 import axios from "./axios";
 
-const Payment = (props) => {
+const Payment = () => {
   const [{ basket, user }, dispatch] = useStateValue();
+  const history = useHistory();
 
   const stripe = useStripe();
   const elements = useElements();
@@ -29,14 +30,16 @@ const Payment = (props) => {
       setClientSecret(response.data.clientSecret);
     };
     getClientSecret();
-  });
+  }, []);
+
+  console.log("THE SECRET IS >>>", clientSecret);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setProcessing(true);
 
     const payload = await stripe
-      .confirmAlipayPayment(clientSecret, {
+      .confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
         },
@@ -48,7 +51,7 @@ const Payment = (props) => {
         setError(null);
         setProcessing(false);
 
-        props.history.replace("/orders");
+        history.replace("/orders");
       });
   };
 
