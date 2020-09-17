@@ -51,6 +51,10 @@ const Payment = () => {
         setError(null);
         setProcessing(false);
 
+        dispatch({
+          type: 'EMPTY_BASKET'
+        })
+
         history.replace("/orders");
       });
   };
