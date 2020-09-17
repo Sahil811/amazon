@@ -1,42 +1,47 @@
 import React, { useState, useEffect } from "react";
 import "./Payment.css";
-import { Link, useHistory } from "react-router-dom";
 import { useStateValue } from "./StateProvider";
 import CheckoutProduct from "./CheckoutProduct";
+import { Link, useHistory } from "react-router-dom";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { getBasketTotal } from "./reducer";
 import CurrencyFormat from "react-currency-format";
+import { getBasketTotal } from "./reducer";
 import axios from "./axios";
 import { db } from "./firebase";
 
-const Payment = () => {
+function Payment() {
   const [{ basket, user }, dispatch] = useStateValue();
   const history = useHistory();
 
   const stripe = useStripe();
   const elements = useElements();
 
-  const [error, setError] = useState(null);
-  const [disabled, setDisabled] = useState(true);
   const [succeeded, setSucceeded] = useState(false);
   const [processing, setProcessing] = useState("");
+  const [error, setError] = useState(null);
+  const [disabled, setDisabled] = useState(true);
   const [clientSecret, setClientSecret] = useState(true);
 
   useEffect(() => {
+    // generate the special stripe secret which allows us to charge a customer
     const getClientSecret = async () => {
       const response = await axios({
         method: "post",
+        // Stripe expects the total in a currencies subunits
         url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
       });
       setClientSecret(response.data.clientSecret);
     };
+
     getClientSecret();
-  }, []);
+  }, [basket]);
 
   console.log("THE SECRET IS >>>", clientSecret);
+  console.log("👱", user);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    // do all the fancy stripe stuff...
+    event.preventDefault();
     setProcessing(true);
 
     const payload = await stripe
@@ -70,9 +75,11 @@ const Payment = () => {
       });
   };
 
-  const handleChange = (e) => {
-    setDisabled(e.empty);
-    setError(e.error ? e.error.message : "");
+  const handleChange = (event) => {
+    // Listen for changes in the CardElement
+    // and display any errors as the customer types their card details
+    setDisabled(event.empty);
+    setError(event.error ? event.error.message : "");
   };
 
   return (
@@ -82,6 +89,7 @@ const Payment = () => {
           Checkout (<Link to="/checkout">{basket?.length} items</Link>)
         </h1>
 
+        {/* Payment section - delivery address */}
         <div className="payment__section">
           <div className="payment__title">
             <h3>Delivery Address</h3>
@@ -89,10 +97,11 @@ const Payment = () => {
           <div className="payment__address">
             <p>{user?.email}</p>
             <p>123 React Lane</p>
-            <p>Los Angels, CA</p>
+            <p>Los Angeles, CA</p>
           </div>
         </div>
 
+        {/* Payment section - Review Items */}
         <div className="payment__section">
           <div className="payment__title">
             <h3>Review items and delivery</h3>
@@ -110,11 +119,14 @@ const Payment = () => {
           </div>
         </div>
 
+        {/* Payment section - Payment method */}
         <div className="payment__section">
           <div className="payment__title">
             <h3>Payment Method</h3>
           </div>
           <div className="payment__details">
+            {/* Stripe magic will go */}
+
             <form onSubmit={handleSubmit}>
               <CardElement onChange={handleChange} />
 
@@ -128,10 +140,11 @@ const Payment = () => {
                   prefix={"$"}
                 />
                 <button disabled={processing || disabled || succeeded}>
-                  <span>{processing ? <p>processing</p> : "Buy Now"}</span>
+                  <span>{processing ? <p>Processing</p> : "Buy Now"}</span>
                 </button>
               </div>
 
+              {/* Errors */}
               {error && <div>{error}</div>}
             </form>
           </div>
@@ -139,6 +152,6 @@ const Payment = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Payment;

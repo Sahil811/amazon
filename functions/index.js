@@ -7,15 +7,15 @@ const stripe = require("stripe")(
 
 // API
 
-// APP CONFIG
+// - App config
 const app = express();
 
-// MIDDLEWARE
+// - Middlewares
 app.use(cors({ origin: true }));
 app.use(express.json());
 
-// API ROUTER
-app.get("/", (request, response) => response.status(200).send("hello word"));
+// - API routes
+app.get("/", (request, response) => response.status(200).send("hello world"));
 
 app.post("/payments/create", async (request, response) => {
   const total = request.query.total;
@@ -33,5 +33,5 @@ app.post("/payments/create", async (request, response) => {
   });
 });
 
-// LISTEN COMMAND
+// - Listen command
 exports.api = functions.https.onRequest(app);
